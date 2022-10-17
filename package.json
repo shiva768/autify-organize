@@ -1,0 +1,12 @@
+{
+  "name": "autify-organize",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.55",
+    "cheerio": "^1.0.0-rc.12",
+    "tslint": "^6.1.3"
+  }
+}
