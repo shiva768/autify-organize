@@ -45,6 +45,61 @@ interface Label {
     updated_at: string,
 }
 
+class SimpleHttpClient {
+    cookies: { [key: string]: any } = {}
+    handleCookiesArray: string[] = ['auth0', 'auth0_compat', 'did', 'did_compat', '_behivee_session']
+
+    getCookies = (cookies: string[] | string, keys: string[]): { [key: string]: any } => {
+        const targetCookies: { [key: string]: any } = {}
+        const _cookies = []
+        if (typeof cookies === 'string')
+            _cookies.push(cookies)
+        else
+            _cookies.push(...cookies)
+        _cookies.forEach(c => {
+            c.split(';')
+                .forEach((c: string) => {
+                    const [key, value] = c.split('=')
+                    if (keys.includes(key.trim())) {
+                        targetCookies[key] = value
+                    }
+                })
+        })
+        return targetCookies
+    };
+
+    request(url: string, method: GoogleAppsScript.URL_Fetch.HttpMethod, payload?: GoogleAppsScript.URL_Fetch.Payload, headers?: GoogleAppsScript.URL_Fetch.HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
+        console.log(`request url: ${url}`)
+        console.log(`payload: ${JSON.stringify(payload)}`)
+        console.log(`headers: ${JSON.stringify(headers)}`)
+        console.log(`cookies: ${JSON.stringify(this.cookies)}`)
+        const options: URLFetchRequestOptions = {
+            method: method,
+            headers: headers,
+            payload: payload,
+            followRedirects: false,
+        }
+        if (this.cookies.length > 0) {
+            options.headers = options.headers || {}
+            options.headers['Cookie'] = Object.keys(this.cookies).map((k: string) => `${k}=${this.cookies[k]}`).join(';')
+        }
+        const response = UrlFetchApp.fetch(url, options)
+        const responseHeaders: { [key: string]: any } = response.getAllHeaders()
+        const responseCookies = responseHeaders['Set-Cookie'] || []
+        Object.assign(this.cookies, this.getCookies(responseCookies, this.handleCookiesArray))
+        return response
+    }
+
+    get(url: string, headers?: HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
+        return this.request(url, 'get', undefined, headers)
+    }
+
+    post(url: string, payload?: GoogleAppsScript.URL_Fetch.Payload, headers?: GoogleAppsScript.URL_Fetch.HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
+        return this.request(url, 'post', payload, headers)
+    }
+
+}
+
 const createOptions = () => {
     const bearerKey = PropertiesService.getScriptProperties().getProperty("KEY")
     const headers: HttpHeaders = {
@@ -120,148 +175,84 @@ const partialUpdate = () => {
         writeScenario(scenario, index + START_BODY_ROW)
 }
 
-const getCookies = (cookies: string[] | string, keys: string[]): { [key: string]: any } => {
-    const targetCookies: { [key: string]: any } = {}
-    const _cookies = []
-    if (typeof cookies === 'string')
-        _cookies.push(cookies)
-    else
-        _cookies.push(...cookies)
-    _cookies.forEach(c => {
-        c.split(';')
-            .forEach((c: string) => {
-                const [key, value] = c.split('=')
-                if (keys.includes(key.trim())) {
-                    targetCookies[key] = value
-                }
-            })
-    })
-    return targetCookies
-};
-
-const visitAutify = (url: string) => {
-    const response = UrlFetchApp.fetch(url)
-    const headers: { [key: string]: any } = response.getAllHeaders()
-    const visitCookies = getCookies(headers['Set-Cookie'], ['_behivee_session'])
+const visitAutify = (client: SimpleHttpClient, url: string) => {
+    const response = client.get(url)
     // @ts-ignore
     const $ = Cheerio.load(response.getContentText())
     const token: string = $('meta[name="csrf-token"]').attr('content')
-    return {token, visitCookies}
+    return token
 }
 
-const auth0 = (url: string, token: string, cookies: { [p: string]: any }) => {
-    const response = UrlFetchApp.fetch(url, {
-        'method': 'post',
-        'payload': {
-            'authenticity_token': token,
-        },
-        'followRedirects': false,
-        'headers': {
-            'Cookie': Object.keys(cookies).map((k: string) => `${k}=${cookies[k]}`).join(';')
-        }
-    })
-    const headers: { [key: string]: any } = response.getAllHeaders()
-    const autifyAuth0Cookies = getCookies(headers['Set-Cookie'], ['_behivee_session'])
-    const authorizeRedirectUrl = headers['Location']
-    return {authorizeRedirectUrl, autifyAuth0Cookies}
-};
-
-const authorize = (url: string): { [key: string]: any } => {
-    const response = UrlFetchApp.fetch(url, {'followRedirects': false})
-    const headers: { [key: string]: any } = response.getAllHeaders()
-    const authorizeCookies = getCookies(headers['Set-Cookie'], ['auth0', 'auth0_compat', 'did', 'did_compat'])
-    const identifierRedirectPath = headers['Location']
-    return {identifierRedirectPath, authorizeCookies}
-};
-
-const identifier = (url: string, cookies: { [p: string]: any }) => {
-    UrlFetchApp.fetch(url, {'headers': {'Cookie': Object.keys(cookies).map((k: string) => `${k}=${cookies[k]}`).join(';')}})
-    const response = UrlFetchApp.fetch(url, {
-        'method': 'post',
-        'followRedirects': false,
-        'payload': {
-            'username': AUTIFY_SCRAPING_LOGIN_ID
-        },
-        'headers': {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Cookie': Object.keys(cookies).map((k: string) => `${k}=${cookies[k]}`).join(';')
-        }
-    })
+const auth0 = (client: SimpleHttpClient, url: string, token: string) => {
+    const response = client.post(url, {'authenticity_token': token})
     const headers: { [key: string]: any } = response.getAllHeaders()
     return headers['Location']
 };
 
-const password = (url: string, cookies: { [p: string]: any }) => {
-    UrlFetchApp.fetch(url, {'headers': {'Cookie': Object.keys(cookies).map((k: string) => `${k}=${cookies[k]}`).join(';')}})
-    const response = UrlFetchApp.fetch(url, {
-        'method': 'post',
-        'payload': {
-            'username': AUTIFY_SCRAPING_LOGIN_ID,
-            'password': AUTIFY_SCRAPING_LOGIN_PASSWORD,
-        },
-        'followRedirects': false,
-        'headers': {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Cookie': Object.keys(cookies).map((k: string) => `${k}=${cookies[k]}`).join(';')
-        }
-    })
+const authorize = (client: SimpleHttpClient, url: string): { [key: string]: any } => {
+    const response = client.get(url)
     const headers: { [key: string]: any } = response.getAllHeaders()
     return headers['Location']
 };
 
-const createGetHeadersObject = (cookies: { [p: string]: any }) => ({
-    'headers': {
-        'Cookie': Object.keys(cookies).map((k: string) => `${k}=${cookies[k]}`).join(';')
-    },
-    'followRedirects': false
-});
-
-const resume = (url: string, cookies: { [p: string]: any }) => {
-    const response = UrlFetchApp.fetch(url, createGetHeadersObject(cookies))
+const identifier = (client: SimpleHttpClient, url: string) => {
+    client.get(url)
+    const response = client.post(url, {
+        'username': AUTIFY_SCRAPING_LOGIN_ID
+    }, {'Content-Type': 'application/x-www-form-urlencoded'})
     const headers: { [key: string]: any } = response.getAllHeaders()
     return headers['Location']
 };
 
-const callback = (url: string, cookies: { [p: string]: any }) => {
-    const response = UrlFetchApp.fetch(url, createGetHeadersObject(cookies))
+const password = (client: SimpleHttpClient, url: string) => {
+    client.get(url)
+    const response = client.post(url, {
+        'username': AUTIFY_SCRAPING_LOGIN_ID,
+        'password': AUTIFY_SCRAPING_LOGIN_PASSWORD
+    }, {'Content-Type': 'application/x-www-form-urlencoded'})
     const headers: { [key: string]: any } = response.getAllHeaders()
-    const autifyCallbackCookies = getCookies(headers['Set-Cookie'], ['_behivee_session'])
-    const appAutifyRedirectUrl = headers['Location']
-    return {appAutifyRedirectUrl, autifyCallbackCookies}
+    return headers['Location']
 };
 
-const appAutify = (url: string, cookies: { [p: string]: any }) => {
-    const response = UrlFetchApp.fetch(url, createGetHeadersObject(cookies))
+const resume = (client: SimpleHttpClient, url: string) => {
+    const response = client.get(url)
     const headers: { [key: string]: any } = response.getAllHeaders()
-    const projectCookies = getCookies(headers['Set-Cookie'], ['_behivee_session'])
-    const projectRedirectUrl = headers['Location']
-    return {projectRedirectUrl, projectCookies}
+    return headers['Location']
 };
 
-const appAutifyProjects = (url: string, cookies: { [p: string]: any }) => {
-    const response = UrlFetchApp.fetch(url, createGetHeadersObject(cookies))
+const callback = (client: SimpleHttpClient, url: string) => {
+    const response = client.get(url)
     const headers: { [key: string]: any } = response.getAllHeaders()
-    return getCookies(headers['Set-Cookie'], ['_behivee_session'])
+    return headers['Location']
+};
+
+const appAutify = (client: SimpleHttpClient, url: string) => {
+    const response = client.get(url)
+    const headers: { [key: string]: any } = response.getAllHeaders()
+    return headers['Location']
+};
+
+const appAutifyProjects = (client: SimpleHttpClient, url: string) => {
+    client.get(url)
 };
 
 const oauth = () => {
-    const {token, visitCookies} = visitAutify(`${AUTIFY_APP_SCRAPING_BASE_URL}/auth/signin`)
-    const {
-        authorizeRedirectUrl,
-        autifyAuth0Cookies
-    } = auth0(`${AUTIFY_APP_SCRAPING_BASE_URL}/auth/auth0`, token, visitCookies)
-    const {identifierRedirectPath, authorizeCookies} = authorize(authorizeRedirectUrl)
-    const passwordRedirectPath = identifier(`${AUTIFY_AUTH_SCRAPING_BASE_URL}${identifierRedirectPath}`, authorizeCookies)
-    const resumeRedirectPath = password(`${AUTIFY_AUTH_SCRAPING_BASE_URL}${passwordRedirectPath}`, authorizeCookies)
-    const callbackRedirectUrl = resume(`${AUTIFY_AUTH_SCRAPING_BASE_URL}${resumeRedirectPath}`, authorizeCookies)
-    const {appAutifyRedirectUrl, autifyCallbackCookies} = callback(callbackRedirectUrl, autifyAuth0Cookies)
-    const {projectRedirectUrl, projectCookies} = appAutify(appAutifyRedirectUrl, autifyCallbackCookies)
-    const sessionCookies = appAutifyProjects(projectRedirectUrl, projectCookies);
-    console.log(sessionCookies)
+    const client = new SimpleHttpClient()
+    const token = visitAutify(client, `${AUTIFY_APP_SCRAPING_BASE_URL}/auth/signin`)
+    const authorizeRedirectUrl = auth0(client, `${AUTIFY_APP_SCRAPING_BASE_URL}/auth/auth0`, token)
+    const identifierRedirectPath = authorize(client, authorizeRedirectUrl)
+    const passwordRedirectPath = identifier(client, `${AUTIFY_AUTH_SCRAPING_BASE_URL}${identifierRedirectPath}`)
+    const resumeRedirectPath = password(client, `${AUTIFY_AUTH_SCRAPING_BASE_URL}${passwordRedirectPath}`)
+    const callbackRedirectUrl = resume(client, `${AUTIFY_AUTH_SCRAPING_BASE_URL}${resumeRedirectPath}`)
+    const appAutifyRedirectUrl = callback(client, callbackRedirectUrl)
+    const projectRedirectUrl = appAutify(client, appAutifyRedirectUrl)
+    appAutifyProjects(client, projectRedirectUrl)
+    console.log(client.cookies)
 };
 
 const test = () => {
-    oauth()
+
+    const response = oauth()
 }
 
-export {update, partialUpdate, oauth, test}
+export {update, partialUpdate, oauth}
