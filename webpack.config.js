@@ -3,7 +3,8 @@ const GasPlugin = require('gas-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  mode: 'production',
+  mode: 'development',
+  devtool: 'inline-source-map',
   context: __dirname,
   entry: {
     main: path.resolve(__dirname, 'src', 'index.ts')

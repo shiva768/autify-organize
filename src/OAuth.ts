@@ -1,5 +1,6 @@
 import SimpleHttpClient from "./SimpleHttpClient";
 import {Constants} from "./Constants";
+// @ts-ignore
 import {load} from "cheerio";
 import AUTIFY_SCRAPING_LOGIN_ID = Constants.AUTIFY_SCRAPING_LOGIN_ID;
 import AUTIFY_SCRAPING_LOGIN_PASSWORD = Constants.AUTIFY_SCRAPING_LOGIN_PASSWORD;
@@ -56,8 +57,7 @@ const appAutifyProjects = (client: SimpleHttpClient, url: string) => {
     client.get(url)
 }
 
-function oauth() {
-    const client = new SimpleHttpClient()
+function oauth(client:SimpleHttpClient) {
     const token = visitAutify(client, `${AUTIFY_APP_SCRAPING_BASE_URL}/auth/signin`)
     const authorizeRedirectUrl = auth0(client, `${AUTIFY_APP_SCRAPING_BASE_URL}/auth/auth0`, token)
     const identifierRedirectPath = authorize(client, authorizeRedirectUrl)
