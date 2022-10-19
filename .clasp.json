@@ -1,6 +1,6 @@
 {
   "scriptId": "scriptId",
-  "rootDir": "./src",
+  "rootDir": "./dist",
   "timeZone": "Asia/Tokyo",
   "dependencies": {
     "libraries": [

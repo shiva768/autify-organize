@@ -1,6 +1,6 @@
 import SimpleHttpClient from "./SimpleHttpClient";
 import {Constants} from "./Constants";
-import {Cheerio} from "cheerio";
+import {load} from "cheerio";
 import AUTIFY_SCRAPING_LOGIN_ID = Constants.AUTIFY_SCRAPING_LOGIN_ID;
 import AUTIFY_SCRAPING_LOGIN_PASSWORD = Constants.AUTIFY_SCRAPING_LOGIN_PASSWORD;
 import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL;
@@ -13,8 +13,9 @@ const getLocation = (response: GoogleAppsScript.URL_Fetch.HTTPResponse) => {
 const visitAutify = (client: SimpleHttpClient, url: string) => {
     const response = client.get(url)
     // @ts-ignore
-    const $ = Cheerio.load(response.getContentText())
-    const token: string = $('meta[name="csrf-token"]').attr('content')
+    const $ = load(response.getContentText())
+    const token: string | undefined = $('meta[name="csrf-token"]').attr('content')
+    if (token === undefined) throw new Error('csrf-token not found')
     return token
 }
 const auth0 = (client: SimpleHttpClient, url: string, token: string) => {
@@ -55,6 +56,7 @@ const appAutify = (client: SimpleHttpClient, url: string) => {
 const appAutifyProjects = (client: SimpleHttpClient, url: string) => {
     client.get(url)
 }
+
 function oauth() {
     const client = new SimpleHttpClient()
     const token = visitAutify(client, `${AUTIFY_APP_SCRAPING_BASE_URL}/auth/signin`)
@@ -66,6 +68,7 @@ function oauth() {
     const appAutifyRedirectUrl = callback(client, callbackRedirectUrl)
     const projectRedirectUrl = appAutify(client, appAutifyRedirectUrl)
     appAutifyProjects(client, projectRedirectUrl)
-    console.log(client.cookies)
+    client.debugCookies()
 }
+
 export default oauth

@@ -1,5 +1,3 @@
-import HttpHeaders = GoogleAppsScript.URL_Fetch.HttpHeaders;
-import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 import Scenario from "./Scenario";
 import oauth from "./OAuth";
 import {Constants} from "./Constants";
@@ -8,10 +6,10 @@ import START_BODY_ROW = Constants.START_BODY_ROW;
 
 const createOptions = () => {
     const bearerKey = PropertiesService.getScriptProperties().getProperty("KEY")
-    const headers: HttpHeaders = {
+    const headers: GoogleAppsScript.URL_Fetch.HttpHeaders = {
         'Authorization': `Bearer ${bearerKey}`
     }
-    const options: URLFetchRequestOptions = {
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
         'method': 'get',
         'headers': headers
     }
@@ -86,4 +84,4 @@ const test = () => {
     oauth()
 }
 
-export {update, partialUpdate}
+export {update, partialUpdate, test}
