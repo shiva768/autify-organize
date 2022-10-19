@@ -12,7 +12,6 @@ const getLocation = (response: GoogleAppsScript.URL_Fetch.HTTPResponse) => {
 }
 const visitAutify = (client: SimpleHttpClient, url: string) => {
     const response = client.get(url)
-    // @ts-ignore
     const $ = load(response.getContentText())
     const token: string | undefined = $('meta[name="csrf-token"]').attr('content')
     if (token === undefined) throw new Error('csrf-token not found')
