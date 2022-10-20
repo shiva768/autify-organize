@@ -2,6 +2,18 @@ const HANDLED_COOKIES_ARRAY: string[] = ['auth0', 'auth0_compat', 'did', 'did_co
 export default class SimpleHttpClient {
     private cookies: { [key: string]: any } = {}
 
+    public get(url: string, headers?: GoogleAppsScript.URL_Fetch.HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
+        return this.request(url, 'get', undefined, headers)
+    }
+
+    public post(url: string, payload?: GoogleAppsScript.URL_Fetch.Payload, headers?: GoogleAppsScript.URL_Fetch.HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
+        return this.request(url, 'post', payload, headers)
+    }
+
+    public debugCookies() {
+        Logger.log(this.cookies)
+    }
+
     private getCookies = (cookies: string[] | string, keys: string[]): { [key: string]: any } => {
         const targetCookies: { [key: string]: any } = {}
         const _cookies = []
@@ -37,18 +49,6 @@ export default class SimpleHttpClient {
         const responseCookies = responseHeaders['Set-Cookie'] || []
         Object.assign(this.cookies, this.getCookies(responseCookies, HANDLED_COOKIES_ARRAY))
         return response
-    }
-
-    public get(url: string, headers?: GoogleAppsScript.URL_Fetch.HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
-        return this.request(url, 'get', undefined, headers)
-    }
-
-    public post(url: string, payload?: GoogleAppsScript.URL_Fetch.Payload, headers?: GoogleAppsScript.URL_Fetch.HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
-        return this.request(url, 'post', payload, headers)
-    }
-
-    public debugCookies() {
-        Logger.log(this.cookies)
     }
 
 }

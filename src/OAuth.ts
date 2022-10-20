@@ -57,7 +57,7 @@ const appAutifyProjects = (client: SimpleHttpClient, url: string) => {
     client.get(url)
 }
 
-function oauth(client:SimpleHttpClient) {
+function oauth(client: SimpleHttpClient) {
     const token = visitAutify(client, `${AUTIFY_APP_SCRAPING_BASE_URL}/auth/signin`)
     const authorizeRedirectUrl = auth0(client, `${AUTIFY_APP_SCRAPING_BASE_URL}/auth/auth0`, token)
     const identifierRedirectPath = authorize(client, authorizeRedirectUrl)

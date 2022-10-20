@@ -1,4 +1,4 @@
-import {update, partialUpdate, test} from './Code'
+import {partialUpdate, update} from './Code'
 
 declare const global: {
     [x: string]: any;
