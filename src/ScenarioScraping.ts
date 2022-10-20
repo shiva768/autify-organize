@@ -1,6 +1,8 @@
 import SimpleHttpClient from "./SimpleHttpClient";
 // @ts-ignore
 import {Cheerio, Element, load} from "cheerio";
+import {Constants} from "./Constants";
+import AUTIFY_PROJECT_ID = Constants.AUTIFY_PROJECT_ID;
 
 enum RESULT {
     SUCCESS = 'success',
@@ -35,7 +37,7 @@ const judgeResult = (resultCard: Cheerio<Element>): RESULT => {
 };
 
 const lastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { lastScenarioExecuteDate: Date | undefined; lastScenarioExecuteLink: SCENARIO_LINK; lastScenarioExecuteEnvironment: any } => {
-    const responseText = client.get(`https://app.autify.com/projects/hoge/scenarios/${scenarioId}/results`).getContentText()
+    const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/results`).getContentText()
     const $ = load(responseText)
     const resultCard = $('body > div > div > main > section:nth-child(3) > div:nth-child(1)')
     const lastScenarioExecuteResult = judgeResult(resultCard);
@@ -49,7 +51,7 @@ const lastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { la
 };
 
 const relationPlans = (client: SimpleHttpClient, scenarioId: number): RelationPlan[] => {
-    const responseText = client.get(`https://app.autify.com/projects/hoge/scenarios/${scenarioId}/test_plans`).getContentText()
+    const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/test_plans`).getContentText()
     const $ = load(responseText)
     const planElements: Cheerio<Element> = $('body > div > div > main > section:nth-child(3) > div > a')
     return planElements.toArray().map((e: Element) => {
