@@ -63,10 +63,10 @@ const partialUpdate = () => {
     const currentValues = sheet.getSheetValues(START_BODY_ROW, 1, sheet.getLastRow(), sheet.getLastColumn())
     const client = new SimpleHttpClient()
     oauth(client)
-    writeScenario(currentValues, new Scenario(scenario), client, sheet)
+    writeScenario(currentValues, new Scenario(scenario), client, sheet, true)
 }
 
-const writeScenario = (currentValues: any[][], scenario: Scenario, client: SimpleHttpClient, sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+const writeScenario = (currentValues: any[][], scenario: Scenario, client: SimpleHttpClient, sheet: GoogleAppsScript.Spreadsheet.Sheet, forceUpdate?:boolean) => {
     const {
         lastScenarioExecuteDate,
         lastScenarioExecuteLink,
@@ -78,7 +78,7 @@ const writeScenario = (currentValues: any[][], scenario: Scenario, client: Simpl
     console.info(`target scenario id: ${scenarioWithExecuteResult.id}`)
     if (index < 0)
         writingScenario(client, scenarioWithExecuteResult, sheet.getLastRow() + 1)
-    else if (!scenarioWithExecuteResult.isSame(currentValues[index]))
+    else if (!scenarioWithExecuteResult.isSame(currentValues[index]) || forceUpdate)
         writingScenario(client, scenarioWithExecuteResult, index + START_BODY_ROW)
 };
 
