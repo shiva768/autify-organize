@@ -1,11 +1,10 @@
-import Scenario from "./Scenario";
+import {Scenario, ScenarioWithExecuteResult} from "./Scenarios";
 import oauth from "./OAuth";
 import {Constants} from "./Constants";
 import SimpleHttpClient from "./SimpleHttpClient";
-import {lastScenarioExecute, relationPlans, SCENARIO_LINK} from "./ScenarioScraping";
+import {lastScenarioExecute, relationPlans} from "./ScenarioScraping";
 import AUTIFY_API_URL = Constants.AUTIFY_API_URL;
 import START_BODY_ROW = Constants.START_BODY_ROW;
-import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL;
 
 const createOptions = () => {
     const bearerKey = PropertiesService.getScriptProperties().getProperty("KEY")
@@ -74,36 +73,21 @@ const writeScenario = (currentValues: any[][], scenario: Scenario, client: Simpl
         lastScenarioExecuteEnvironment
     } = lastScenarioExecute(client, scenario.id)
     const relationPlanArray = relationPlans(client, scenario.id)
-    const relationPlanString = relationPlanArray.map(p => p.text).join(',')
-    const index = currentValues.findIndex(v => v[0] == scenario.id)
-    const currentExecutedDateValue = currentValues[index][6] === '-' ? '-' : (currentValues[index][6] as Date).toLocaleString('ja-JP')
+    const scenarioWithExecuteResult = new ScenarioWithExecuteResult(scenario, lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment, relationPlanArray)
+    const index = currentValues.findIndex(v => v[0] == scenarioWithExecuteResult.id)
+    console.info(`target scenario id: ${scenarioWithExecuteResult.id}`)
     if (index < 0)
-        writingScenario(client, scenario, relationPlanArray, lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment, sheet.getLastRow() + 1)
-    else if (!scenario.isSame(currentValues[index])
-        || relationPlanString !== currentValues[index][5]
-        || lastScenarioExecuteDate !== currentExecutedDateValue) {
-        writingScenario(client, scenario, relationPlanArray, lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment, index + START_BODY_ROW)
-    }
+        writingScenario(client, scenarioWithExecuteResult, sheet.getLastRow() + 1)
+    else if (!scenarioWithExecuteResult.isSame(currentValues[index]))
+        writingScenario(client, scenarioWithExecuteResult, index + START_BODY_ROW)
 };
 
-const writingScenario = (client: SimpleHttpClient, _scenario: Scenario, relationPlanArray: { text: string, href: string | undefined }[], lastScenarioExecuteDate: string, lastScenarioExecuteResult: SCENARIO_LINK, lastScenarioExecuteEnvironment: string, row: number) => {
+const writingScenario = (client: SimpleHttpClient, scenarioWithExecuteResult: ScenarioWithExecuteResult, row: number) => {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('scenarios')
     if (sheet === null) return
     const range = sheet.getRange(row, 1, 1, sheet.getLastColumn())
-    const scenario = new Scenario(_scenario)
-    console.log(`update scenario id: ${scenario.id}`)
-    range.setValues([[`=HYPERLINK("${scenario.project_url}", "${scenario.id}")`, scenario.name, scenario.created_at, scenario.updated_at, scenario.labelNames(), '', lastScenarioExecuteDate, '', lastScenarioExecuteEnvironment]])
-    const relationPlanBuilder = SpreadsheetApp.newRichTextValue().setText(relationPlanArray.map(p => p.text).join(','))
-    // @ts-ignore
-    relationPlanArray.filter(p => p.text.length > 0).reduce((prev: string, current: { text: string, href: string }) => {
-        relationPlanBuilder.setLinkUrl(prev.length, prev.length + current.text.length, `${AUTIFY_APP_SCRAPING_BASE_URL}${current.href}`)
-        return prev + current.text + ','
-    }, '')
-    sheet.getRange(row, 6, 1, 1).setRichTextValue(relationPlanBuilder.build())
-    const resultBuilder = SpreadsheetApp.newRichTextValue().setText(lastScenarioExecuteResult.result)
-    if (lastScenarioExecuteResult.href !== undefined)
-        resultBuilder.setLinkUrl(0, lastScenarioExecuteResult.result.length, lastScenarioExecuteResult.href).build()
-    sheet.getRange(row, 8, 1, 1).setRichTextValue(resultBuilder.build())
+    console.info(`update scenario id: ${scenarioWithExecuteResult.id}`)
+    range.setRichTextValues([scenarioWithExecuteResult.toRichTextValues()])
 }
 
 export {update, partialUpdate}

@@ -34,7 +34,7 @@ const judgeResult = (resultCard: Cheerio<Element>): RESULT => {
     }
 };
 
-const lastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { lastScenarioExecuteDate: string; lastScenarioExecuteLink: SCENARIO_LINK; lastScenarioExecuteEnvironment: any } => {
+const lastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { lastScenarioExecuteDate: Date | undefined; lastScenarioExecuteLink: SCENARIO_LINK; lastScenarioExecuteEnvironment: any } => {
     const responseText = client.get(`https://app.autify.com/projects/hoge/scenarios/${scenarioId}/results`).getContentText()
     const $ = load(responseText)
     const resultCard = $('body > div > div > main > section:nth-child(3) > div:nth-child(1)')
@@ -44,17 +44,17 @@ const lastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { la
     const lastScenarioExecuteLink = {result: lastScenarioExecuteResult, href: resultCardLink.attr('href')}
     const datetimeStampString = resultCard.find('.result-card-metadata-value').attr('data-timestamp')
     const datetimeStamp = parseInt(datetimeStampString)
-    const lastScenarioExecuteDate = datetimeStampString && 0 < datetimeStamp ? new Date(datetimeStamp * 1000).toLocaleString('ja-JP') : '-'
+    const lastScenarioExecuteDate = datetimeStampString && 0 < datetimeStamp ? new Date(datetimeStamp * 1000) : undefined
     return {lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment}
 };
 
-const relationPlans = (client: SimpleHttpClient, scenarioId: number): { text: string, href: string | undefined }[] => {
+const relationPlans = (client: SimpleHttpClient, scenarioId: number): RelationPlan[] => {
     const responseText = client.get(`https://app.autify.com/projects/hoge/scenarios/${scenarioId}/test_plans`).getContentText()
     const $ = load(responseText)
     const planElements: Cheerio<Element> = $('body > div > div > main > section:nth-child(3) > div > a')
     return planElements.toArray().map((e: Element) => {
         const cheerioElement = $(e)
-        return {text: cheerioElement.text(), href: cheerioElement.attr('href')}
+        return {text: cheerioElement.text(), href: cheerioElement.attr('href')} as RelationPlan
     })
 };
 
