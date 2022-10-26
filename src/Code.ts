@@ -38,7 +38,7 @@ const update = () => {
     const ui = SpreadsheetApp.getUi()
     const button = ui.alert('シナリオ 更新・取得', '実行しますか', ui.ButtonSet.YES_NO)
     if (button !== ui.Button.YES) return
-    const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), SHEET.getLastColumn())
+    const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
     const client = new SimpleHttpClient()
     oauth(client)
     let page = 1
@@ -66,7 +66,7 @@ const partialUpdate = () => {
         const end = parseInt(regexpResult[3]) ? parseInt(regexpResult[3]) : 99999999
         const sign = regexpResult[2]
         if (start <= end) {
-            const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), SHEET.getLastColumn())
+            const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
             const client = new SimpleHttpClient()
             oauth(client)
             let page = 1
@@ -88,7 +88,7 @@ const partialUpdate = () => {
 
 const singleUpdate = (id: number) => {
     const scenario = getScenario(id)
-    const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), SHEET.getLastColumn())
+    const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
     const client = new SimpleHttpClient()
     oauth(client)
     writeScenario(currentValues, new Scenario(scenario), client, true)
@@ -111,7 +111,7 @@ const writeScenario = (currentValues: any[][], scenario: Scenario, client: Simpl
 };
 
 const writingScenario = (client: SimpleHttpClient, scenarioWithExecuteResult: ScenarioWithExecuteResult, row: number) => {
-    const range = SHEET.getRange(row, 1, 1, SHEET.getLastColumn())
+    const range = SHEET.getRange(row, 1, 1, Constants.SYNC_LAST_COLUMN)
     console.info(`update scenario id: ${scenarioWithExecuteResult.id}`)
     range.setRichTextValues([scenarioWithExecuteResult.toRichTextValues()])
 }

@@ -7,6 +7,7 @@ import AUTIFY_PROJECT_ID = Constants.AUTIFY_PROJECT_ID;
 enum RESULT {
     SUCCESS = 'success',
     FAILURE = 'failure',
+    DOING = 'doing',
     ERROR = 'error',
     CANCEL = 'cancel',
     UNKNOWN = 'unknown',
@@ -26,13 +27,10 @@ const judgeResult = (resultCard: Cheerio<Element>): RESULT => {
         return RESULT.FAILURE
     } else {
         const resultCardIcon = resultCard.find('div.result-card-status.px-2 > i')
-        if (resultCardIcon.hasClass('fa-ban')) {
-            return RESULT.ERROR
-        } else if (resultCardIcon.hasClass('fa-minus-circle')) {
-            return RESULT.CANCEL
-        } else {
-            return RESULT.UNKNOWN
-        }
+        if (resultCardIcon.hasClass('fa-ban')) return RESULT.ERROR
+        else if (resultCardIcon.hasClass('fa-minus-circle')) return RESULT.CANCEL
+        else if (resultCardIcon.hasClass('fa-spinner')) return RESULT.DOING
+        return RESULT.UNKNOWN
     }
 };
 
