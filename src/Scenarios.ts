@@ -1,8 +1,8 @@
-import Label from "./Label";
-import {SCENARIO_LINK} from "./ScenarioScraping";
-import {Constants} from "./Constants";
-import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL;
-import CompareToIndex = Constants.CompareToIndex;
+import Label from "./Label"
+import {SCENARIO_LINK} from "./ScenarioScraping"
+import {Constants} from "./Constants"
+import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL
+import CompareToIndex = Constants.CompareToIndex
 
 class Scenario {
     readonly id: number

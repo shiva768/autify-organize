@@ -1,10 +1,10 @@
-import {Scenario, ScenarioWithExecuteResult} from "./Scenarios";
-import oauth from "./OAuth";
-import {Constants} from "./Constants";
-import SimpleHttpClient from "./SimpleHttpClient";
-import {getLastScenarioExecute, getLastUpdatedBy, getRelationPlans} from "./ScenarioScraping";
-import AUTIFY_API_URL = Constants.AUTIFY_API_URL;
-import START_BODY_ROW = Constants.START_BODY_ROW;
+import {Scenario, ScenarioWithExecuteResult} from "./Scenarios"
+import oauth from "./OAuth"
+import {Constants} from "./Constants"
+import SimpleHttpClient from "./SimpleHttpClient"
+import {getLastScenarioExecute, getLastUpdatedBy, getRelationPlans} from "./ScenarioScraping"
+import AUTIFY_API_URL = Constants.AUTIFY_API_URL
+import START_BODY_ROW = Constants.START_BODY_ROW
 
 const SHEET = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('scenarios') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('scenarios')
 
@@ -109,7 +109,7 @@ const writeScenario = (currentValues: any[][], scenario: Scenario, client: Simpl
         writingScenario(client, scenarioWithExecuteResult, SHEET.getLastRow() + 1)
     else if (!scenarioWithExecuteResult.isSame(currentValues[index]) || forceUpdate)
         writingScenario(client, scenarioWithExecuteResult, index + START_BODY_ROW)
-};
+}
 
 const writingScenario = (client: SimpleHttpClient, scenarioWithExecuteResult: ScenarioWithExecuteResult, row: number) => {
     const range = SHEET.getRange(row, 1, 1, Constants.SYNC_LAST_COLUMN)

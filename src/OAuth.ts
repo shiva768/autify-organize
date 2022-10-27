@@ -1,11 +1,11 @@
-import SimpleHttpClient from "./SimpleHttpClient";
-import {Constants} from "./Constants";
+import SimpleHttpClient from "./SimpleHttpClient"
+import {Constants} from "./Constants"
 // @ts-ignore
-import {load} from "cheerio";
-import AUTIFY_SCRAPING_LOGIN_ID = Constants.AUTIFY_SCRAPING_LOGIN_ID;
-import AUTIFY_SCRAPING_LOGIN_PASSWORD = Constants.AUTIFY_SCRAPING_LOGIN_PASSWORD;
-import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL;
-import AUTIFY_AUTH_SCRAPING_BASE_URL = Constants.AUTIFY_AUTH_SCRAPING_BASE_URL;
+import {load} from "cheerio"
+import AUTIFY_SCRAPING_LOGIN_ID = Constants.AUTIFY_SCRAPING_LOGIN_ID
+import AUTIFY_SCRAPING_LOGIN_PASSWORD = Constants.AUTIFY_SCRAPING_LOGIN_PASSWORD
+import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL
+import AUTIFY_AUTH_SCRAPING_BASE_URL = Constants.AUTIFY_AUTH_SCRAPING_BASE_URL
 
 const getLocation = (response: GoogleAppsScript.URL_Fetch.HTTPResponse) => {
     const headers: { [key: string]: any } = response.getAllHeaders()

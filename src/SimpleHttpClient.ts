@@ -1,4 +1,4 @@
-import {Constants} from "./Constants";
+import {Constants} from "./Constants"
 
 const HANDLED_COOKIES_ARRAY: string[] = ['auth0', 'auth0_compat', 'did', 'did_compat', '_behivee_session']
 export default class SimpleHttpClient {
@@ -34,7 +34,7 @@ export default class SimpleHttpClient {
                 })
         })
         return targetCookies
-    };
+    }
 
     private request(url: string, method: GoogleAppsScript.URL_Fetch.HttpMethod, payload?: GoogleAppsScript.URL_Fetch.Payload, headers?: GoogleAppsScript.URL_Fetch.HttpHeaders): GoogleAppsScript.URL_Fetch.HTTPResponse {
         const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -48,7 +48,7 @@ export default class SimpleHttpClient {
             options.headers['Cookie'] = Object.keys(this.cookies).map(key => `${key}=${this.cookies[key]}`).join('; ')
         }
         this.retryCount = 0
-        const response = this.request_(url, options);
+        const response = this.request_(url, options)
         const responseHeaders: { [key: string]: any } = response.getAllHeaders()
         const responseCookies = responseHeaders['Set-Cookie'] || []
         Object.assign(this.cookies, this.getCookies(responseCookies, HANDLED_COOKIES_ARRAY))
@@ -77,6 +77,6 @@ export default class SimpleHttpClient {
                 throw new Error(`Request failed with code ${response.getResponseCode()}`)
             }
         }
-        return response;
+        return response
     }
 }

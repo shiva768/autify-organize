@@ -1,8 +1,8 @@
-import SimpleHttpClient from "./SimpleHttpClient";
+import SimpleHttpClient from "./SimpleHttpClient"
 // @ts-ignore
-import {Cheerio, Element, load} from "cheerio";
-import {Constants} from "./Constants";
-import AUTIFY_PROJECT_ID = Constants.AUTIFY_PROJECT_ID;
+import {Cheerio, Element, load} from "cheerio"
+import {Constants} from "./Constants"
+import AUTIFY_PROJECT_ID = Constants.AUTIFY_PROJECT_ID
 
 enum RESULT {
     SUCCESS = 'success',
@@ -32,13 +32,13 @@ const judgeResult = (resultCard: Cheerio<Element>): RESULT => {
         else if (resultCardIcon.hasClass('fa-spinner')) return RESULT.DOING
         return RESULT.UNKNOWN
     }
-};
+}
 
 const getLastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { lastScenarioExecuteDate: Date | undefined; lastScenarioExecuteLink: SCENARIO_LINK; lastScenarioExecuteEnvironment: any } => {
     const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/results`).getContentText()
     const $ = load(responseText)
     const resultCard = $('body > div > div > main > section:nth-child(3) > div:nth-child(1)')
-    const lastScenarioExecuteResult = judgeResult(resultCard);
+    const lastScenarioExecuteResult = judgeResult(resultCard)
     const resultCardLink: Element = resultCard.find('.result-card-content > .result-card-link')
     const lastScenarioExecuteEnvironment = resultCardLink.text().replace(/[\n\t]*\s{2}\n*/g, '') || '-'
     const lastScenarioExecuteLink = {result: lastScenarioExecuteResult, href: resultCardLink.attr('href')}
@@ -46,7 +46,7 @@ const getLastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): {
     const datetimeStamp = parseInt(datetimeStampString)
     const lastScenarioExecuteDate = datetimeStampString && 0 < datetimeStamp ? new Date(datetimeStamp * 1000) : undefined
     return {lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment}
-};
+}
 
 const getRelationPlans = (client: SimpleHttpClient, scenarioId: number): RelationPlan[] => {
     const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/test_plans`).getContentText()
@@ -56,7 +56,7 @@ const getRelationPlans = (client: SimpleHttpClient, scenarioId: number): Relatio
         const cheerioElement = $(e)
         return {text: cheerioElement.text(), href: cheerioElement.attr('href')} as RelationPlan
     })
-};
+}
 
 const getLastUpdatedBy = (client: SimpleHttpClient, scenarioId: number): string => {
     const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/histories`).getContentText()

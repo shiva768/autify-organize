@@ -1,7 +1,7 @@
 import {partialUpdate, update} from './Code'
 
 declare const global: {
-    [x: string]: any;
+    [x: string]: any
 }
 
 global.update = update
