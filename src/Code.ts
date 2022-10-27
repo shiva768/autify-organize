@@ -2,7 +2,7 @@ import {Scenario, ScenarioWithExecuteResult} from "./Scenarios";
 import oauth from "./OAuth";
 import {Constants} from "./Constants";
 import SimpleHttpClient from "./SimpleHttpClient";
-import {lastScenarioExecute, relationPlans} from "./ScenarioScraping";
+import {getLastScenarioExecute, getLastUpdatedBy, getRelationPlans} from "./ScenarioScraping";
 import AUTIFY_API_URL = Constants.AUTIFY_API_URL;
 import START_BODY_ROW = Constants.START_BODY_ROW;
 
@@ -99,9 +99,10 @@ const writeScenario = (currentValues: any[][], scenario: Scenario, client: Simpl
         lastScenarioExecuteDate,
         lastScenarioExecuteLink,
         lastScenarioExecuteEnvironment
-    } = lastScenarioExecute(client, scenario.id)
-    const relationPlanArray = relationPlans(client, scenario.id)
-    const scenarioWithExecuteResult = new ScenarioWithExecuteResult(scenario, lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment, relationPlanArray)
+    } = getLastScenarioExecute(client, scenario.id)
+    const relationPlanArray = getRelationPlans(client, scenario.id)
+    const lastUpdatedBy = getLastUpdatedBy(client, scenario.id)
+    const scenarioWithExecuteResult = new ScenarioWithExecuteResult(scenario, lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment, relationPlanArray, lastUpdatedBy)
     const index = currentValues.findIndex(v => v[0] == scenarioWithExecuteResult.id)
     console.info(`target scenario id: ${scenarioWithExecuteResult.id}`)
     if (index < 0)

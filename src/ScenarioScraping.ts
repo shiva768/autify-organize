@@ -34,7 +34,7 @@ const judgeResult = (resultCard: Cheerio<Element>): RESULT => {
     }
 };
 
-const lastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { lastScenarioExecuteDate: Date | undefined; lastScenarioExecuteLink: SCENARIO_LINK; lastScenarioExecuteEnvironment: any } => {
+const getLastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { lastScenarioExecuteDate: Date | undefined; lastScenarioExecuteLink: SCENARIO_LINK; lastScenarioExecuteEnvironment: any } => {
     const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/results`).getContentText()
     const $ = load(responseText)
     const resultCard = $('body > div > div > main > section:nth-child(3) > div:nth-child(1)')
@@ -48,7 +48,7 @@ const lastScenarioExecute = (client: SimpleHttpClient, scenarioId: number): { la
     return {lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment}
 };
 
-const relationPlans = (client: SimpleHttpClient, scenarioId: number): RelationPlan[] => {
+const getRelationPlans = (client: SimpleHttpClient, scenarioId: number): RelationPlan[] => {
     const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/test_plans`).getContentText()
     const $ = load(responseText)
     const planElements: Cheerio<Element> = $('body > div > div > main > section:nth-child(3) > div > a')
@@ -58,4 +58,11 @@ const relationPlans = (client: SimpleHttpClient, scenarioId: number): RelationPl
     })
 };
 
-export {lastScenarioExecute, relationPlans, SCENARIO_LINK}
+const getLastUpdatedBy = (client: SimpleHttpClient, scenarioId: number): string => {
+    const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}/histories`).getContentText()
+    const $ = load(responseText)
+    const lastUpdatedByElement: Cheerio<Element> = $('body > div.dashboard > div > main > section:nth-child(3) > div:nth-child(1) > a > span:nth-child(3) > span')
+    return lastUpdatedByElement?.text() || '-'
+}
+
+export {getLastScenarioExecute, getRelationPlans, getLastUpdatedBy, SCENARIO_LINK}
