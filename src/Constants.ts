@@ -7,6 +7,7 @@ export namespace Constants {
     export const AUTIFY_SCRAPING_LOGIN_PASSWORD = PropertiesService.getScriptProperties().getProperty('AUTIFY_SCRAPING_LOGIN_PASSWORD')
     export const START_BODY_ROW = 2
     export const SYNC_LAST_COLUMN = 10
+    export const MAX_RETRY_COUNT = 3
     export namespace CompareToIndex {
         // export const ID = 0
         export const NAME = 1
