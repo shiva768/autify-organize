@@ -31,9 +31,9 @@ class Scenario {
     }
 
     protected isSame(compareTo: Array<any>) {
-        // console.log(`this: ${this.name}, compareTo: ${compareTo[CompareToIndex.NAME]}\n
-        // this: ${this.convertToLocalString(this.updated_at)}, compareTo: ${this.convertToLocalString(new Date(compareTo[CompareToIndex.UPDATED_DATE]))}\n
-        // this: ${this.labelNames()}, compareTo: ${compareTo[CompareToIndex.LABELS]}`)
+        // console.log(`name: "${this.name}" === "${compareTo[CompareToIndex.NAME]}"\n
+        // updated_at: "${this.convertToLocalString(this.updated_at)}" === "${this.convertToLocalString(new Date(compareTo[CompareToIndex.UPDATED_DATE]))}"\n
+        // labels: "${this.labelNames()}" === "${compareTo[CompareToIndex.LABELS]}"`)
         return this.name === compareTo[CompareToIndex.NAME]
             && this.convertToLocalString(this.updated_at) === this.convertToLocalString(new Date(compareTo[CompareToIndex.UPDATED_DATE]))
             && this.labelNames() === compareTo[CompareToIndex.LABELS]
@@ -57,8 +57,8 @@ class ScenarioWithExecuteResult extends Scenario {
     }
 
     public isSame(compareTo: Array<any>) {
-        // console.log(`${this.getRelationPlanString()} === ${compareTo[CompareToIndex.PLANS]}\n
-        // ${this.convertToLocalString(this.lastScenarioExecuteDate)} === ${this.convertToLocalString(new Date(compareTo[CompareToIndex.LAST_SCENARIO_EXECUTE_DATE]))}`)
+        // console.log(`plan: "${this.getRelationPlanString()}" === "${compareTo[CompareToIndex.PLANS]}"\n
+        // execute date: "${this.convertToLocalString(this.lastScenarioExecuteDate)}" === "${this.convertToLocalString(new Date(compareTo[CompareToIndex.LAST_SCENARIO_EXECUTE_DATE]))}"`)
         return super.isSame(compareTo)
             && this.getRelationPlanString() === compareTo[CompareToIndex.PLANS]
             && this.convertToLocalString(this.lastScenarioExecuteDate) === this.convertToLocalString(new Date(compareTo[CompareToIndex.LAST_SCENARIO_EXECUTE_DATE]))
@@ -86,7 +86,7 @@ class ScenarioWithExecuteResult extends Scenario {
     }
 
     private getRelationPlanString() {
-        return this.relationPlanArray.map(r => r.text).join(', ')
+        return this.relationPlanArray.map(r => r.text).join(',')
     }
 
     private createSimpleRichTextValue(text: any, link?: string): GoogleAppsScript.Spreadsheet.RichTextValue {
