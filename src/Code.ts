@@ -2,9 +2,10 @@ import {Scenario, ScenarioWithExecuteResult} from "./Scenarios"
 import oauth from "./OAuth"
 import {Constants} from "./Constants"
 import SimpleHttpClient from "./SimpleHttpClient"
-import {getLastScenarioExecute, getLastUpdatedBy, getRelationPlans} from "./ScenarioScraping"
-import AUTIFY_API_URL = Constants.AUTIFY_API_URL
-import START_BODY_ROW = Constants.START_BODY_ROW
+import {getLastScenarioExecute, getLastUpdatedBy, getRelationPlans, isExistsDataTable} from "./ScenarioScraping"
+import AUTIFY_API_URL = Constants.AUTIFY_API_URL;
+import START_BODY_ROW = Constants.START_BODY_ROW;
+import CompareToIndex = Constants.CompareToIndex;
 
 const SHEET = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('scenarios') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('scenarios')
 
@@ -34,7 +35,7 @@ const getScenario = (id: number) => {
     return JSON.parse(responseText) as Scenario
 }
 
-const update = () => {
+const update = (forceUpdate: boolean = false) => {
     const ui = SpreadsheetApp.getUi()
     const button = ui.alert('シナリオ 更新・取得', '実行しますか', ui.ButtonSet.YES_NO)
     if (button !== ui.Button.YES) return
@@ -45,7 +46,7 @@ const update = () => {
     while (true) {
         const scenarios = getScenarios(page)
         if (scenarios.length === 0) return
-        scenarios.forEach(s => writeScenario(currentValues, new Scenario(s), client))
+        scenarios.forEach(s => complementScenarioAndWrite(currentValues, new Scenario(s), client, forceUpdate))
         page++
     }
 }
@@ -75,13 +76,13 @@ const partialUpdate = () => {
                 if (scenarios.length === 0) return
                 scenarios
                     .filter((s: Scenario) => eval(`${start} ${sign} ${s.id} && ${s.id} ${sign} ${end}`))
-                    .forEach(s => writeScenario(currentValues, new Scenario(s), client))
+                    .forEach(s => complementScenarioAndWrite(currentValues, new Scenario(s), client))
                 page++
             }
-        }else{
+        } else {
             ui.alert('シナリオID指定または範囲指定 更新・取得', '範囲指定が不正です', ui.ButtonSet.OK)
         }
-    }else{
+    } else {
         ui.alert('シナリオID指定または範囲指定 更新・取得', '範囲指定が不正です', ui.ButtonSet.OK)
     }
 }
@@ -91,10 +92,20 @@ const singleUpdate = (id: number) => {
     const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
     const client = new SimpleHttpClient()
     oauth(client)
-    writeScenario(currentValues, new Scenario(scenario), client, true)
+    complementScenarioAndWrite(currentValues, new Scenario(scenario), client, true)
 }
 
-const writeScenario = (currentValues: any[][], scenario: Scenario, client: SimpleHttpClient, forceUpdate?: boolean) => {
+const complementScenarioAndWrite = (currentValues: any[][], scenario: Scenario, client: SimpleHttpClient, forceUpdate?: boolean) => {
+    const scenarioWithExecuteResult = complementScenario(client, scenario);
+    const index = currentValues.findIndex(v => v[CompareToIndex.ID] == scenarioWithExecuteResult.id)
+    console.info(`target scenario id: ${scenarioWithExecuteResult.id}`)
+    if (index < 0)
+        writeScenario(client, scenarioWithExecuteResult, SHEET.getLastRow() + 1)
+    else if (!scenarioWithExecuteResult.isSame(currentValues[index]) || forceUpdate)
+        writeScenario(client, scenarioWithExecuteResult, index + START_BODY_ROW)
+}
+
+const complementScenario = (client: SimpleHttpClient, scenario: Scenario) => {
     const {
         lastScenarioExecuteDate,
         lastScenarioExecuteLink,
@@ -102,16 +113,11 @@ const writeScenario = (currentValues: any[][], scenario: Scenario, client: Simpl
     } = getLastScenarioExecute(client, scenario.id)
     const relationPlanArray = getRelationPlans(client, scenario.id)
     const lastUpdatedBy = getLastUpdatedBy(client, scenario.id)
-    const scenarioWithExecuteResult = new ScenarioWithExecuteResult(scenario, lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment, relationPlanArray, lastUpdatedBy)
-    const index = currentValues.findIndex(v => v[0] == scenarioWithExecuteResult.id)
-    console.info(`target scenario id: ${scenarioWithExecuteResult.id}`)
-    if (index < 0)
-        writingScenario(client, scenarioWithExecuteResult, SHEET.getLastRow() + 1)
-    else if (!scenarioWithExecuteResult.isSame(currentValues[index]) || forceUpdate)
-        writingScenario(client, scenarioWithExecuteResult, index + START_BODY_ROW)
+    const existsDataTable = isExistsDataTable(client, scenario.id)
+    return new ScenarioWithExecuteResult(scenario, lastScenarioExecuteDate, lastScenarioExecuteLink, lastScenarioExecuteEnvironment, relationPlanArray, lastUpdatedBy, existsDataTable)
 }
 
-const writingScenario = (client: SimpleHttpClient, scenarioWithExecuteResult: ScenarioWithExecuteResult, row: number) => {
+const writeScenario = (client: SimpleHttpClient, scenarioWithExecuteResult: ScenarioWithExecuteResult, row: number) => {
     const range = SHEET.getRange(row, 1, 1, Constants.SYNC_LAST_COLUMN)
     console.info(`update scenario id: ${scenarioWithExecuteResult.id}`)
     range.setRichTextValues([scenarioWithExecuteResult.toRichTextValues()])

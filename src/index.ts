@@ -6,3 +6,4 @@ declare const global: {
 
 global.update = update
 global.partialUpdate = partialUpdate
+global.forceUpdate = () => update(true)

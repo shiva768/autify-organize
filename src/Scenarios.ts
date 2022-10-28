@@ -1,8 +1,8 @@
 import Label from "./Label"
 import {SCENARIO_LINK} from "./ScenarioScraping"
 import {Constants} from "./Constants"
-import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL
-import CompareToIndex = Constants.CompareToIndex
+import AUTIFY_APP_SCRAPING_BASE_URL = Constants.AUTIFY_APP_SCRAPING_BASE_URL;
+import CompareToIndex = Constants.CompareToIndex;
 
 class Scenario {
     readonly id: number
@@ -26,7 +26,7 @@ class Scenario {
     }
 
     protected convertToLocalString(date: Date | undefined) {
-        if(Number.isNaN(date?.getTime())) return '-'
+        if (Number.isNaN(date?.getTime())) return '-'
         return date?.toLocaleString('ja-JP') || '-'
     }
 
@@ -46,14 +46,16 @@ class ScenarioWithExecuteResult extends Scenario {
     private readonly lastScenarioExecuteEnvironment: string
     private readonly relationPlanArray: RelationPlan[]
     private readonly lastUpdatedBy: string
+    private readonly existsDataTable: boolean
 
-    public constructor(scenario: Scenario, lastScenarioExecuteDate: Date | undefined, lastScenarioExecuteResult: SCENARIO_LINK, lastScenarioExecuteEnvironment: string, relationPlanArray: RelationPlan[], lastUpdatedBy: string) {
+    public constructor(scenario: Scenario, lastScenarioExecuteDate: Date | undefined, lastScenarioExecuteResult: SCENARIO_LINK, lastScenarioExecuteEnvironment: string, relationPlanArray: RelationPlan[], lastUpdatedBy: string, existsDataTable: boolean) {
         super(scenario)
         this.lastScenarioExecuteDate = lastScenarioExecuteDate
         this.lastScenarioExecuteResult = lastScenarioExecuteResult
         this.lastScenarioExecuteEnvironment = lastScenarioExecuteEnvironment
         this.relationPlanArray = relationPlanArray
         this.lastUpdatedBy = lastUpdatedBy
+        this.existsDataTable = existsDataTable
     }
 
     public isSame(compareTo: Array<any>) {
@@ -74,6 +76,7 @@ class ScenarioWithExecuteResult extends Scenario {
         return [
             this.createSimpleRichTextValue(this.id, this.project_url),
             this.createSimpleRichTextValue(this.name),
+            this.createSimpleRichTextValue(this.existsDataTable ? '○' : ''),
             this.createSimpleRichTextValue(this.convertToLocalString(this.created_at)),
             this.createSimpleRichTextValue(this.convertToLocalString(this.updated_at)),
             this.createSimpleRichTextValue(this.lastUpdatedBy),
@@ -95,7 +98,6 @@ class ScenarioWithExecuteResult extends Scenario {
             builder.setLinkUrl(link)
         return builder.build()
     }
-
 }
 
 export {Scenario, ScenarioWithExecuteResult}

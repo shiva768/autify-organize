@@ -65,4 +65,10 @@ const getLastUpdatedBy = (client: SimpleHttpClient, scenarioId: number): string 
     return lastUpdatedByElement?.text() || '-'
 }
 
-export {getLastScenarioExecute, getRelationPlans, getLastUpdatedBy, SCENARIO_LINK}
+const isExistsDataTable = (client: SimpleHttpClient, scenarioId: number): boolean => {
+    const responseText = client.get(`https://app.autify.com/projects/${AUTIFY_PROJECT_ID}/scenarios/${scenarioId}`).getContentText()
+    const $ = load(responseText)
+    return !$('body > div.d-none').next().text().includes('dataTable: []')
+}
+
+export {getLastScenarioExecute, getRelationPlans, getLastUpdatedBy, isExistsDataTable, SCENARIO_LINK}
