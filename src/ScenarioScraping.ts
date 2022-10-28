@@ -23,7 +23,7 @@ const judgeResult = (resultCard: Cheerio<Element>): RESULT => {
     if (resultCard.length <= 0) return RESULT.NOT_YET_EXECUTED
     if (resultCard.hasClass('result-card-success')) {
         return RESULT.SUCCESS
-    } else if (resultCard.hasClass('result-card-failure')) {
+    } else if (resultCard.hasClass('result-card-danger')) {
         return RESULT.FAILURE
     } else {
         const resultCardIcon = resultCard.find('div.result-card-status.px-2 > i')
