@@ -37,7 +37,7 @@ const getScenario = (id: number) => {
 
 const update = (forceUpdate: boolean = false) => {
     const ui = SpreadsheetApp.getUi()
-    const button = ui.alert('シナリオ 更新・取得', '実行しますか', ui.ButtonSet.YES_NO)
+    const button = ui.alert(`${forceUpdate ? '[強制]' : ''}シナリオ 更新・取得`, '実行しますか', ui.ButtonSet.YES_NO)
     if (button !== ui.Button.YES) return
     const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
     const client = new SimpleHttpClient()
