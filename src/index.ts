@@ -1,9 +1,10 @@
-import {partialUpdate, update} from './Code'
+import {partialUpdate, updateOuter, update} from './Code'
 
 declare const global: {
     [x: string]: any
 }
 
+global.updateOuter = updateOuter
 global.update = update
 global.partialUpdate = partialUpdate
-global.forceUpdate = () => update(true)
+global.forceUpdate = () => updateOuter(true)

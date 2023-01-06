@@ -35,10 +35,7 @@ const getScenario = (id: number) => {
     return JSON.parse(responseText) as Scenario
 }
 
-const update = (forceUpdate: boolean = false) => {
-    const ui = SpreadsheetApp.getUi()
-    const button = ui.alert(`${forceUpdate ? '[強制]' : ''}シナリオ 更新・取得`, '実行しますか', ui.ButtonSet.YES_NO)
-    if (button !== ui.Button.YES) return
+const update = (forceUpdate: boolean) => {
     const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
     const client = new SimpleHttpClient()
     oauth(client)
@@ -49,6 +46,13 @@ const update = (forceUpdate: boolean = false) => {
         scenarios.forEach(s => complementScenarioAndWrite(currentValues, new Scenario(s), client, forceUpdate))
         page++
     }
+}
+
+const updateOuter = (forceUpdate: boolean = false) => {
+    const ui = SpreadsheetApp.getUi()
+    const button = ui.alert(`${forceUpdate ? '[強制]' : ''}シナリオ 更新・取得`, '実行しますか', ui.ButtonSet.YES_NO)
+    if (button !== ui.Button.YES) return
+    update(forceUpdate);
 }
 
 const REGEX_ID = /^\d+$/
@@ -123,4 +127,4 @@ const writeScenario = (client: SimpleHttpClient, scenarioWithExecuteResult: Scen
     range.setRichTextValues([scenarioWithExecuteResult.toRichTextValues()])
 }
 
-export {update, partialUpdate}
+export {updateOuter, partialUpdate, update}
