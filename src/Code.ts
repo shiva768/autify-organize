@@ -16,7 +16,8 @@ const createOptions = () => {
     }
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
         'method': 'get',
-        'headers': headers
+        'headers': headers,
+        "muteHttpExceptions" : true
     }
     return options
 }
@@ -31,7 +32,9 @@ const getScenarios = (page: number) => {
 
 const getScenario = (id: number) => {
     const options = createOptions()
-    const responseText = UrlFetchApp.fetch(`${AUTIFY_API_URL}/scenarios/${id}`, options).getContentText()
+    const httpResponse = UrlFetchApp.fetch(`${AUTIFY_API_URL}/scenarios/${id}`, options)
+    if(httpResponse.getResponseCode() === 404) return null
+    const responseText = httpResponse.getContentText()
     return JSON.parse(responseText) as Scenario
 }
 
@@ -57,6 +60,7 @@ const updateOuter = (forceUpdate: boolean = false) => {
 
 const REGEX_ID = /^\d+$/
 const REGEX_RANGE = /^\s*(\d*)\s*(<=*)\s*(\d*)\s*$/
+const REGEX_MULTI_ID = /^\s*(\d+\s*,\s*)*\d+\s*$/
 
 const partialUpdate = () => {
     const ui = SpreadsheetApp.getUi()
@@ -65,6 +69,8 @@ const partialUpdate = () => {
     const rangeOrId = promptResponse.getResponseText()
     if (rangeOrId.match(REGEX_ID)) {
         singleUpdate(parseInt(rangeOrId))
+    } else if(REGEX_MULTI_ID.test(rangeOrId)) {
+        multipleUpdate(rangeOrId)
     } else if (REGEX_RANGE.test(rangeOrId)) {
         const regexpResult = REGEX_RANGE.exec(rangeOrId) || []
         const start = regexpResult[1] ? parseInt(regexpResult[1]) : 0
@@ -93,10 +99,18 @@ const partialUpdate = () => {
 
 const singleUpdate = (id: number) => {
     const scenario = getScenario(id)
+    if(scenario === null){
+        console.info(`target scenario id: ${id} is not found`)
+        return
+    }
     const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
     const client = new SimpleHttpClient()
     oauth(client)
     complementScenarioAndWrite(currentValues, new Scenario(scenario), client, true)
+}
+
+const multipleUpdate = (ids: string) => {
+    ids.split(',').forEach(id => singleUpdate(parseInt(id)))
 }
 
 const complementScenarioAndWrite = (currentValues: any[][], scenario: Scenario, client: SimpleHttpClient, forceUpdate?: boolean) => {
