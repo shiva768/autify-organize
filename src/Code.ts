@@ -38,6 +38,7 @@ const setResumeTrigger = (pageNumber: number) => {
     const scriptProperties = PropertiesService.getScriptProperties()
     scriptProperties.setProperty(Constants.RESUME_PAGE_KEY, pageNumber.toString())
     ScriptApp.newTrigger(Constants.RESUME_TRIGGER_NAME).timeBased().after(Constants.DELAY_TIME).create()
+    console.info(`set resume trigger. page: ${pageNumber}`)
 }
 
 const deleteResumeTrigger = () => {
