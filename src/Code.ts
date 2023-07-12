@@ -8,7 +8,7 @@ import START_BODY_ROW = Constants.START_BODY_ROW;
 import CompareToIndex = Constants.CompareToIndex;
 
 const SHEET = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('scenarios') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('scenarios')
-
+const START_TIME = new Date().getTime()
 const createOptions = () => {
     const bearerKey = PropertiesService.getScriptProperties().getProperty("KEY")
     const headers: GoogleAppsScript.URL_Fetch.HttpHeaders = {
@@ -17,9 +17,36 @@ const createOptions = () => {
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
         'method': 'get',
         'headers': headers,
-        "muteHttpExceptions" : true
+        "muteHttpExceptions": true
     }
     return options
+}
+
+const resume = () => {
+    const scriptProperties = PropertiesService.getScriptProperties()
+    const resumePageNumber = Number(scriptProperties.getProperty(Constants.RESUME_PAGE_KEY))
+    update(false, resumePageNumber)
+    if (isNeedContinueInBackground())
+        setResumeTrigger(resumePageNumber)
+    else
+        deleteResumeTrigger()
+}
+
+const isNeedContinueInBackground = (): boolean => new Date().getTime() - START_TIME >= Constants.MAX_EXECUTION_TIME
+
+const setResumeTrigger = (pageNumber: number) => {
+    const scriptProperties = PropertiesService.getScriptProperties()
+    scriptProperties.setProperty(Constants.RESUME_PAGE_KEY, pageNumber.toString())
+    ScriptApp.newTrigger(Constants.RESUME_TRIGGER_NAME).timeBased().after(Constants.DELAY_TIME).create()
+}
+
+const deleteResumeTrigger = () => {
+    const scriptProperties = PropertiesService.getScriptProperties()
+    scriptProperties.deleteProperty(Constants.RESUME_PAGE_KEY)
+    const triggers = ScriptApp.getProjectTriggers()
+    triggers.forEach(t => {
+        if (t.getHandlerFunction() === Constants.RESUME_TRIGGER_NAME) ScriptApp.deleteTrigger(t)
+    })
 }
 
 const getScenarios = (page: number) => {
@@ -33,17 +60,21 @@ const getScenarios = (page: number) => {
 const getScenario = (id: number) => {
     const options = createOptions()
     const httpResponse = UrlFetchApp.fetch(`${AUTIFY_API_URL}/scenarios/${id}`, options)
-    if(httpResponse.getResponseCode() === 404) return null
+    if (httpResponse.getResponseCode() === 404) return null
     const responseText = httpResponse.getContentText()
     return JSON.parse(responseText) as Scenario
 }
 
-const update = (forceUpdate: boolean) => {
+const update = (forceUpdate: boolean, externalPage: number = 0) => {
     const currentValues = SHEET.getSheetValues(START_BODY_ROW, 1, SHEET.getLastRow(), Constants.SYNC_LAST_COLUMN)
     const client = new SimpleHttpClient()
     oauth(client)
-    let page = 1
+    let page = externalPage === 0 ? 1 : externalPage
     while (true) {
+        if (isNeedContinueInBackground()) {
+            setResumeTrigger(page)
+            return
+        }
         const scenarios = getScenarios(page)
         if (scenarios.length === 0) return
         scenarios.forEach(s => complementScenarioAndWrite(currentValues, new Scenario(s), client, forceUpdate))
@@ -51,11 +82,14 @@ const update = (forceUpdate: boolean) => {
     }
 }
 
-const updateOuter = (forceUpdate: boolean = false) => {
+const updateFromUI = (forceUpdate: boolean = false) => {
     const ui = SpreadsheetApp.getUi()
     const button = ui.alert(`${forceUpdate ? '[強制]' : ''}シナリオ 更新・取得`, '実行しますか', ui.ButtonSet.YES_NO)
     if (button !== ui.Button.YES) return
-    update(forceUpdate);
+    update(forceUpdate)
+    if (isNeedContinueInBackground()) {
+        ui.alert('実行時間が最大値を超えたため、バックグラウンドで実行を継続します。')
+    }
 }
 
 const REGEX_ID = /^\d+$/
@@ -69,7 +103,7 @@ const partialUpdate = () => {
     const rangeOrId = promptResponse.getResponseText()
     if (rangeOrId.match(REGEX_ID)) {
         singleUpdate(parseInt(rangeOrId))
-    } else if(REGEX_MULTI_ID.test(rangeOrId)) {
+    } else if (REGEX_MULTI_ID.test(rangeOrId)) {
         multipleUpdate(rangeOrId)
     } else if (REGEX_RANGE.test(rangeOrId)) {
         const regexpResult = REGEX_RANGE.exec(rangeOrId) || []
@@ -85,7 +119,11 @@ const partialUpdate = () => {
                 const scenarios = getScenarios(page)
                 if (scenarios.length === 0) return
                 scenarios
-                    .filter((s: Scenario) => eval(`${start} ${sign} ${s.id} && ${s.id} ${sign} ${end}`))
+                    .filter((s: Scenario) => eval(`${start}
+                    ${sign}
+                    ${s.id} && ${s.id}
+                    ${sign}
+                    ${end}`))
                     .forEach(s => complementScenarioAndWrite(currentValues, new Scenario(s), client))
                 page++
             }
@@ -99,7 +137,7 @@ const partialUpdate = () => {
 
 const singleUpdate = (id: number) => {
     const scenario = getScenario(id)
-    if(scenario === null){
+    if (scenario === null) {
         console.info(`target scenario id: ${id} is not found`)
         return
     }
@@ -141,4 +179,4 @@ const writeScenario = (client: SimpleHttpClient, scenarioWithExecuteResult: Scen
     range.setRichTextValues([scenarioWithExecuteResult.toRichTextValues()])
 }
 
-export {updateOuter, partialUpdate, update}
+export {updateFromUI, partialUpdate, update, resume}

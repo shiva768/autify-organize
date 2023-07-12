@@ -6,8 +6,12 @@ export namespace Constants {
     export const AUTIFY_SCRAPING_LOGIN_ID = PropertiesService.getScriptProperties().getProperty('AUTIFY_SCRAPING_LOGIN_ID')
     export const AUTIFY_SCRAPING_LOGIN_PASSWORD = PropertiesService.getScriptProperties().getProperty('AUTIFY_SCRAPING_LOGIN_PASSWORD')
     export const START_BODY_ROW = 2
-    export const SYNC_LAST_COLUMN = 11
+    export const SYNC_LAST_COLUMN = 12
     export const MAX_RETRY_COUNT = 3
+    export const RESUME_TRIGGER_NAME = 'resume'
+    export const RESUME_PAGE_KEY = 'resume_page_number'
+    export const MAX_EXECUTION_TIME = 20 * 60 * 1000
+    export const DELAY_TIME = 10 * 1000
     export namespace CompareToIndex {
         export const ID = 0
         export const NAME = 1

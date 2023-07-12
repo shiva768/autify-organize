@@ -85,6 +85,7 @@ class ScenarioWithExecuteResult extends Scenario {
             this.createSimpleRichTextValue(this.convertToLocalString(this.lastScenarioExecuteDate)),
             this.createSimpleRichTextValue(this.lastScenarioExecuteResult.result, this.lastScenarioExecuteResult.href),
             this.createSimpleRichTextValue(this.lastScenarioExecuteEnvironment),
+            this.createSimpleRichTextValue(this.convertToLocalString(new Date())),
         ]
     }
 
