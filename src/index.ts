@@ -4,7 +4,7 @@ declare const global: {
     [x: string]: any
 }
 
-global.updateOuter = updateFromUI
+global.updateFromUI = updateFromUI
 global.update = update
 global.partialUpdate = partialUpdate
 global.forceUpdate = () => updateFromUI(true)
