@@ -26,9 +26,7 @@ const resume = () => {
     const scriptProperties = PropertiesService.getScriptProperties()
     const resumePageNumber = Number(scriptProperties.getProperty(Constants.RESUME_PAGE_KEY))
     update(false, resumePageNumber)
-    if (isNeedContinueInBackground())
-        setResumeTrigger(resumePageNumber)
-    else
+    if (!isNeedContinueInBackground())
         deleteResumeTrigger()
 }
 
